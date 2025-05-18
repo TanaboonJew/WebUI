@@ -1,11 +1,18 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .docker_utils import create_container
+from .docker_utils import (  # Update this import line
+    create_container,
+    start_container,
+    stop_container,
+    delete_container,
+    get_user_container_stats
+)
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile
 from .forms import DockerImageForm, FileUploadForm
 from .monitoring import get_system_stats, get_user_container_stats
+from django.contrib import messages
 import os
 
 def home(request):
@@ -52,26 +59,32 @@ def file_manager(request):
 
 @login_required
 def start_container_view(request):
-    if start_container(request.user):
-        messages.success(request, "Container started successfully")
-    else:
-        messages.error(request, "Failed to start container")
+    """View to start a user's container"""
+    if request.method == 'POST':  # Add this check for security
+        if start_container(request.user):
+            messages.success(request, "Container started successfully")
+        else:
+            messages.error(request, "Failed to start container")
     return redirect('docker-management')
 
 @login_required
 def stop_container_view(request):
-    if stop_container(request.user):
-        messages.success(request, "Container stopped successfully")
-    else:
-        messages.error(request, "Failed to stop container")
+    """View to stop a user's container"""
+    if request.method == 'POST':
+        if stop_container(request.user):
+            messages.success(request, "Container stopped successfully")
+        else:
+            messages.error(request, "Failed to stop container")
     return redirect('docker-management')
 
 @login_required
 def delete_container_view(request):
-    if delete_container(request.user):
-        messages.success(request, "Container deleted successfully")
-    else:
-        messages.error(request, "Failed to delete container")
+    """View to delete a user's container"""
+    if request.method == 'POST':
+        if delete_container(request.user):
+            messages.success(request, "Container deleted successfully")
+        else:
+            messages.error(request, "Failed to delete container")
     return redirect('docker-management')
 
 @login_required

@@ -9,13 +9,25 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Your Container</span>
-            <div>
+            <div class="btn-group">
                 {% if container.status == 'running' %}
-                    <a href="{% url 'stop-container' %}" class="btn btn-warning btn-sm">Stop</a>
+                    <form method="post" action="{% url 'stop-container' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning btn-sm">Stop</button>
+                    </form>
                 {% else %}
-                    <a href="{% url 'start-container' %}" class="btn btn-success btn-sm">Start</a>
+                    <form method="post" action="{% url 'start-container' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm">Start</button>
+                    </form>
                 {% endif %}
-                <a href="{% url 'delete-container' %}" class="btn btn-danger btn-sm">Delete</a>
+                <form method="post" action="{% url 'delete-container' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm" 
+                            onclick="return confirm('Are you sure you want to delete this container?')">
+                        Delete
+                    </button>
+                </form>
             </div>
         </div>
         <div class="card-body">
@@ -25,7 +37,7 @@
                     {{ container.status }}
                 </span>
             </p>
-            {% if container.status == 'running' %}
+            {% if container.status == 'running' and container.port_bindings.80_tcp %}
                 <p><strong>Access URL:</strong> http://localhost:{{ container.port_bindings.80_tcp }}</p>
             {% endif %}
         </div>
