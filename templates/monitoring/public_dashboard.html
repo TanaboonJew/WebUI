@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}System Status{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">CPU Usage</div>
+            <div class="card-body">
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ cpu_usage }}%">{{ cpu_usage }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">Memory Usage</div>
+            <div class="card-body">
+                <div class="progress">
+                    <div class="progress-bar bg-success" style="width: {{ memory_usage }}%">
+                        {{ memory_usage }}% ({{ memory_total }}GB)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">System Info</div>
+            <div class="card-body">
+                <p>Containers: {{ running_containers }} running / {{ total_containers }} total</p>
+                <p>GPU Containers: {{ gpu_containers }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

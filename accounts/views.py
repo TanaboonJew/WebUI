@@ -1,13 +1,30 @@
-import docker
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from .forms import CustomUserCreationForm
 
-client = docker.from_env()
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('monitoring:user_dashboard')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'accounts/login.html', {'form': form})
 
-def create_container(image_name, user_id):
-    container = client.containers.run(
-        image=image_name,
-        name=f"user_{user_id}_container",
-        detach=True,
-        tty=True,
-        volumes={f"/home/h100_1/workspace/user_files/{user_id}": {'bind': '/data', 'mode': 'rw'}}
-    )
-    return container.id
+def register_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('monitoring:user_dashboard')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'accounts/register.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('monitoring:public_dashboard')

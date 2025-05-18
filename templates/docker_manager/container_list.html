@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Containers{% endblock %}
+
+{% block content %}
+<h2>Your Docker Containers</h2>
+<a href="{% url 'docker_manager:container_create' %}" class="btn btn-primary mb-3">Create New Container</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Image</th>
+            <th>Status</th>
+            <th>CPU</th>
+            <th>Memory</th>
+            <th>GPU</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for container in containers %}
+        <tr>
+            <td>{{ container.name }}</td>
+            <td>{{ container.image }}</td>
+            <td>
+                <span class="badge bg-{% if container.status == 'running' %}success{% else %}warning{% endif %}">
+                    {{ container.get_status_display }}
+                </span>
+            </td>
+            <td>{{ container.cpu_limit }} cores</td>
+            <td>{{ container.memory_limit }}</td>
+            <td>
+                {% if container.gpu_access %}
+                <span class="badge bg-success">Enabled</span>
+                {% else %}
+                <span class="badge bg-secondary">Disabled</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if container.status == 'running' %}
+                <a href="{% url 'docker_manager:container_control' container.container_id 'stop' %}" 
+                   class="btn btn-sm btn-warning">Stop</a>
+                {% else %}
+                <a href="{% url 'docker_manager:container_control' container.container_id 'start' %}" 
+                   class="btn btn-sm btn-success">Start</a>
+                {% endif %}
+                <a href="{% url 'docker_manager:container_control' container.container_id 'remove' %}" 
+                   class="btn btn-sm btn-danger">Remove</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">No containers found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

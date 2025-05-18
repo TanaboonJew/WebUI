@@ -36,7 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    ''
+    'accounts',
+    'docker_manager',
+    'file_manager',
+    'monitoring',
 ]
 
 MIDDLEWARE = [
@@ -114,9 +117,31 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'monitoring:user_dashboard'
+LOGOUT_REDIRECT_URL = 'monitoring:public_dashboard'
+
+# Add these at the bottom
+DOCKER_CONFIG = {
+    'MAX_CONTAINERS_PER_USER': 1,
+    'DEFAULT_CPU_LIMIT': 4.0,
+    'DEFAULT_MEMORY_LIMIT': '16g',
+    'DEFAULT_STORAGE_LIMIT': '50g',
+    'MAX_GPU_USERS': 8,
+}
+
