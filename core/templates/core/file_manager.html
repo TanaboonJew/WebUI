@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>File Manager</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            Upload File
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            Your Files
+        </div>
+        <div class="card-body">
+            {% if files %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td>{{ file.filename }}</td>
+                        <td>{{ file.uploaded_at }}</td>
+                        <td>
+                            <a href="{% url 'download-file' file.id %}" class="btn btn-sm btn-success">Download</a>
+                            <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No files uploaded yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
