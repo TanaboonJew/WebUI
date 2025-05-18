@@ -2,6 +2,8 @@ import docker
 from docker.errors import DockerException
 from .models import DockerContainer
 from users.models import CustomUser
+from django.conf import settings
+import os
 
 client = docker.from_env()
 
@@ -20,12 +22,12 @@ def create_container(user: CustomUser, image_name: str):
             mem_limit=f"{user.ram_limit}m",
             cpu_shares=int(user.cpu_limit * 1024),
             volumes={
-                f'{settings.MEDIA_ROOT}/User_{user.id}_({user.username})': {
+                os.path.join(settings.MEDIA_ROOT, f'User_{user.id}_({user.username})'): {
                     'bind': '/workspace', 
                     'mode': 'rw'
                 }
             },
-            ports={'80_tcp': user.id + 8000},  # Unique port for each user
+            ports={'80/tcp': user.id + 8000},
             runtime='nvidia' if user.gpu_access else None,
             detach=True
         )
@@ -37,7 +39,7 @@ def create_container(user: CustomUser, image_name: str):
                 'container_id': container.id,
                 'image_name': image_name,
                 'status': 'created',
-                'port_bindings': {'80_tcp': user.id + 8000}
+                'port_bindings': {'80_tcp': user.id + 8000}  # Note the underscore
             }
         )
         return True
