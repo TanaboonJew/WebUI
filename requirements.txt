@@ -15,7 +15,6 @@ psutil==7.0.0
 pydantic==2.11.4
 pydantic_core==2.33.2
 python-on-whales==0.76.1
-pywin32==310
 requests==2.32.3
 sqlparse==0.5.3
 typing-inspection==0.4.0

@@ -6,11 +6,12 @@ from .docker_utils import (  # Update this import line
     start_container,
     stop_container,
     delete_container,
-    get_user_container_stats
+    get_user_container_stats,
+    create_jupyter_container
 )
 from .file_utils import ensure_workspace_exists
-from .models import DockerContainer, UserFile
-from .forms import DockerImageForm, FileUploadForm
+from .models import DockerContainer, UserFile, AIModel
+from .forms import DockerImageForm, FileUploadForm, AIModelForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
 import os
@@ -128,4 +129,28 @@ def private_dashboard(request):
         'system_stats': system_stats,
         'container_stats': container_stats,
         'user': request.user
+    })
+    
+@login_required
+def ai_dashboard(request):
+
+    models = AIModel.objects.filter(user=request.user)
+    jupyter_url = None
+    form = AIModelForm()
+
+    if request.method == 'POST':
+        if 'start_jupyter' in request.POST:
+            jupyter_url = create_jupyter_container(request.user)
+        elif 'upload_model' in request.POST:
+            form = AIModelForm(request.POST, request.FILES)
+            if form.is_valid():
+                model = form.save(commit=False)
+                model.user = request.user
+                model.save()
+                return redirect('ai-dashboard')
+
+    return render(request, 'core/ai_dashboard.html', {
+        'models': models,
+        'jupyter_url': jupyter_url,
+        'form': form
     })

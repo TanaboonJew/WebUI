@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+
+<div class="container mt-4">
+    <h2>AI Model Management</h2>
+    
+    <div class="row">
+        <!-- Jupyter Notebook Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Jupyter Notebook
+                </div>
+                <div class="card-body">
+                    {% if jupyter_url %}
+                    <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
+                        Open Jupyter Notebook
+                    </a>
+                    {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="start_jupyter" class="btn btn-primary">
+                            Launch Jupyter Notebook
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Upload Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Upload AI Model
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" name="upload_model" class="btn btn-primary">
+                            Upload Model
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Model List -->
+    <div class="card mt-4">
+        <div class="card-header">
+            Your AI Models
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Framework</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                    <tr>
+                        <td>{{ model.name }}</td>
+                        <td>{{ model.get_framework_display }}</td>
+                        <td>{{ model.created_at }}</td>
+                        <td>
+                            <a href="{{ model.model_file.url }}" class="btn btn-sm btn-info">
+                                Download
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No models uploaded yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
