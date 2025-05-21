@@ -29,7 +29,7 @@ services:
       - ./staticfiles:/app/staticfiles:ro
       - ./user_data:/app/user_data:ro
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - web
     restart: unless-stopped
