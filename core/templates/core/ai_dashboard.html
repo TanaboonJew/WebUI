@@ -3,125 +3,107 @@
 
 {% block content %}
 <div class="container mt-4">
+    <h2>AI Development Environment</h2>
+    
     <div class="row">
-        <div class="col-md-8">
+        <!-- Jupyter Notebook Section -->
+        <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h4>AI Model Management</h4>
+                    Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Jupyter Notebook</h5>
-                                </div>
-                                <div class="card-body text-center">
-                                    {% if jupyter_url %}
-                                    <a href="{{ jupyter_url }}" target="_blank" 
-                                       class="btn btn-success btn-lg">
-                                        <i class="fas fa-external-link-alt"></i> Open Notebook
-                                    </a>
-                                    {% else %}
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <button type="submit" name="start_jupyter" 
-                                                class="btn btn-primary btn-lg">
-                                            <i class="fas fa-rocket"></i> Launch Notebook
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Upload Model</h5>
-                                </div>
-                                <div class="card-body">
-                                    <form method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        {{ form|crispy }}
-                                        <button type="submit" name="upload_model" 
-                                                class="btn btn-primary mt-2">
-                                            <i class="fas fa-upload"></i> Upload
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+                    {% if jupyter_url %}
+                    <div class="alert alert-success">
+                        Notebook is running! Token: <code>{{ jupyter_url|split:"?token="|last }}</code>
                     </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h4>Your AI Models</h4>
-                </div>
-                <div class="card-body">
-                    {% if models %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Framework</th>
-                                    <th>Uploaded</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for model in models %}
-                                <tr>
-                                    <td>{{ model.name }}</td>
-                                    <td><span class="badge bg-secondary">{{ model.get_framework_display }}</span></td>
-                                    <td>{{ model.created_at|date:"Y-m-d H:i" }}</td>
-                                    <td>
-                                        <a href="{{ model.model_file.url }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-download"></i> Download
-                                        </a>
-                                        <a href="#" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
+                        <i class="fas fa-external-link-alt"></i> Open Notebook
+                    </a>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                            <i class="fas fa-stop"></i> Stop Notebook
+                        </button>
+                    </form>
+                    {% elif jupyter_running %}
+                    <div class="alert alert-warning">
+                        Notebook is running but URL not available
                     </div>
                     {% else %}
-                    <div class="alert alert-warning">
-                        No models uploaded yet. Upload your first AI model above.
-                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="start_jupyter" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Launch Notebook
+                        </button>
+                    </form>
                     {% endif %}
+                </div>
+                <div class="card-footer">
+                    <small>Storage: {{ user.storage_used|filesizeformat }} / {{ user.storage_limit|filesizeformat }}</small>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4">
+        <!-- Model Upload Section -->
+        <div class="col-md-6">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5>Quick Start Guide</h5>
+                <div class="card-header bg-info text-white">
+                    Upload AI Model
                 </div>
                 <div class="card-body">
-                    <ol>
-                        <li>Launch Jupyter Notebook</li>
-                        <li>Upload your model files</li>
-                        <li>Access them at <code>/models</code></li>
-                        <li>Use your data from <code>/data</code></li>
-                        <li>Save notebooks in <code>/notebooks</code></li>
-                    </ol>
-                    <hr>
-                    <h6>Available Frameworks:</h6>
-                    <ul>
-                        <li>TensorFlow</li>
-                        <li>PyTorch</li>
-                        <li>ONNX</li>
-                        <li>Scikit-learn</li>
-                    </ul>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" name="upload_model" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload Model
+                        </button>
+                    </form>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Model List -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            Your AI Models
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Framework</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in models %}
+                        <tr>
+                            <td>{{ model.name }}</td>
+                            <td><span class="badge bg-primary">{{ model.get_framework_display }}</span></td>
+                            <td>{{ model.model_file.size|filesizeformat }}</td>
+                            <td>{{ model.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{{ model.model_file.url }}" class="btn btn-sm btn-info" download>
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                <a href="{% url 'delete-model' model.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No models uploaded yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

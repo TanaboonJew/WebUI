@@ -133,24 +133,49 @@ def private_dashboard(request):
     
 @login_required
 def ai_dashboard(request):
-
     models = AIModel.objects.filter(user=request.user)
     jupyter_url = None
-    form = AIModelForm()
-
+    jupyter_running = False
+    
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            jupyter_url = create_jupyter_container(request.user)
+            jupyter_url = create_container(request.user, None, container_type='jupyter')
+            messages.success(request, "Jupyter Notebook started successfully")
+        elif 'stop_jupyter' in request.POST:
+            if manage_container(request.user, 'stop', container_type='jupyter'):
+                messages.success(request, "Jupyter Notebook stopped successfully")
+            else:
+                messages.error(request, "Failed to stop Jupyter Notebook")
         elif 'upload_model' in request.POST:
             form = AIModelForm(request.POST, request.FILES)
             if form.is_valid():
                 model = form.save(commit=False)
                 model.user = request.user
                 model.save()
+                messages.success(request, "Model uploaded successfully")
                 return redirect('ai-dashboard')
-
+    
+    # Check if Jupyter is running
+    try:
+        if client:
+            client.containers.get(f"jupyter_{request.user.id}_{request.user.username}")
+            jupyter_running = True
+    except:
+        pass
+    
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'jupyter_url': jupyter_url,
-        'form': form
+        'jupyter_running': jupyter_running,
+        'form': AIModelForm()
     })
+
+@login_required
+def delete_model(request, model_id):
+    try:
+        model = AIModel.objects.get(id=model_id, user=request.user)
+        model.delete()
+        messages.success(request, "Model deleted successfully")
+    except AIModel.DoesNotExist:
+        messages.error(request, "Model not found")
+    return redirect('ai-dashboard')

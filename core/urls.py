@@ -13,4 +13,5 @@ urlpatterns = [
     path('monitoring/', views.public_dashboard, name='public-monitoring'),
     path('monitoring/private/', views.private_dashboard, name='private-monitoring'),
     path('ai/', views.ai_dashboard, name='ai-dashboard'),
+    path('ai/delete/<int:model_id>/', views.delete_model, name='delete-model'),
 ]
