@@ -6,7 +6,6 @@ from .docker_utils import (  # Update this import line
     start_container,
     stop_container,
     delete_container,
-    get_user_container_stats,
     create_jupyter_container
 )
 from .file_utils import ensure_workspace_exists
@@ -139,7 +138,7 @@ def ai_dashboard(request):
     
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            jupyter_url = create_container(request.user, None, container_type='jupyter')
+            jupyter_url = create_jupyter_container(request.user)
             messages.success(request, "Jupyter Notebook started successfully")
         elif 'stop_jupyter' in request.POST:
             if manage_container(request.user, 'stop', container_type='jupyter'):
@@ -171,7 +170,7 @@ def ai_dashboard(request):
     })
 
 @login_required
-def delete_model(request, model_id):
+def delete_model(reques, model_id):
     try:
         model = AIModel.objects.get(id=model_id, user=request.user)
         model.delete()

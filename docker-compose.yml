@@ -10,18 +10,17 @@ services:
   web:
     build: .
     command: >
-      sh -c "python manage.py migrate && 
-             python manage.py collectstatic --noinput && 
-             daphne -b 0.0.0.0 -p 8000 WebUI.asgi:application"
+      sh -c "daphne -b 0.0.0.0 -p 8080 WebUI.asgi:application"
     volumes:
       - ./user_data:/app/user_data
       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
     environment:
       - DJANGO_SETTINGS_MODULE=WebUI.settings
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
-    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
@@ -30,7 +29,7 @@ services:
       - ./staticfiles:/app/staticfiles:ro
       - ./user_data:/app/user_data:ro
     ports:
-      - "8080:80"
+      - "8081:8080"
     depends_on:
       - web
     restart: unless-stopped

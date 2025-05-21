@@ -156,3 +156,41 @@ def get_container_stats(container_id):
     except Exception as e:
         logger.error(f"Stats collection failed: {e}")
         return None
+    
+def create_jupyter_container(user: CustomUser):
+    if not client:
+        return None
+        
+    try:
+        user_dir = get_user_workspace(user)
+        os.makedirs(os.path.join(user_dir, 'jupyter'), exist_ok=True)
+        os.makedirs(os.path.join(user_dir, 'models'), exist_ok=True)
+        os.makedirs(os.path.join(user_dir, 'data'), exist_ok=True)
+
+        port = 8888
+        token = generate_jupyter_token()
+
+        container = client.containers.run(
+            image="jupyter/tensorflow-notebook:latest",
+            name=f"jupyter_{user.id}_{user.username}",
+            volumes={
+                os.path.join(user_dir, 'jupyter'): {'bind': '/home/jovyan/work', 'mode': 'rw'},
+                os.path.join(user_dir, 'models'): {'bind': '/home/jovyan/models', 'mode': 'ro'},
+                os.path.join(user_dir, 'data'): {'bind': '/home/jovyan/data', 'mode': 'ro'}
+            },
+            ports={f'{port}/tcp': (8080 + user.id)},
+            environment={
+                'JUPYTER_TOKEN': token,
+                'GRANT_SUDO': 'yes'
+            },
+            detach=True,
+            mem_limit=f"{user.ram_limit}m",
+            cpu_shares=int(user.cpu_limit * 1024),
+            runtime='nvidia' if user.gpu_access else None
+        )
+
+        return f"http://localhost:{8080 + user.id}/?token={token}"
+    
+    except Exception as e:
+        logger.error(f"Failed to start Jupyter container: {e}")
+        return None
