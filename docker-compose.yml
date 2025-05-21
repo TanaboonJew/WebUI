@@ -14,14 +14,13 @@ services:
     volumes:
       - ./user_data:/app/user_data
       - /var/run/docker.sock:/var/run/docker.sock
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     environment:
       - DJANGO_SETTINGS_MODULE=WebUI.settings
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
-    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
