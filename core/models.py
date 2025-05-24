@@ -21,8 +21,8 @@ class DockerContainer(models.Model):
     ]
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    container_id = models.CharField(max_length=64)
-    container_type = models.CharField(max_length=20, choices=CONTAINER_TYPES)
+    container_id = models.CharField(max_length=64, default='default_container_id')
+    container_type = models.CharField(max_length=20, choices=CONTAINER_TYPES, default='regular')
     image_name = models.CharField(max_length=255)
     status = models.CharField(max_length=20, default='stopped')
     port_bindings = models.JSONField(default=dict)
