@@ -4,6 +4,7 @@ from docker.errors import DockerException
 import subprocess
 import json
 from humanize import naturalsize
+from .models import DockerContainer
 
 try:
     docker_client = docker.from_env()
