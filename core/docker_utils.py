@@ -194,3 +194,69 @@ def create_jupyter_container(user: CustomUser):
     except Exception as e:
         logger.error(f"Failed to start Jupyter container: {e}")
         return None
+
+class DockerManager:
+    def __init__(self):
+        self.client = docker.from_env()
+        
+    def build_from_dockerfile(self, user, dockerfile_path):
+        """Build container from user's Dockerfile"""
+        try:
+            # Generate random container name
+            container_name = f"user_{user.id}_{user.username}"
+            
+            # Build with resource constraints
+            build_logs = []
+            image, logs = self.client.images.build(
+                path=os.path.dirname(dockerfile_path),
+                dockerfile=os.path.basename(dockerfile_path),
+                tag=f"{container_name}:latest",
+                rm=True,
+                forcerm=True,
+                buildargs={
+                    'USER_ID': str(user.id),
+                    'USERNAME': user.username
+                }
+            )
+            
+            for log in logs:
+                if 'stream' in log:
+                    build_logs.append(log['stream'])
+            
+            return image.id, "\n".join(build_logs)
+            
+        except Exception as e:
+            logger.error(f"Build failed: {str(e)}")
+            raise
+            
+    def run_container(self, user, image_id):
+        """Run container with resource limits"""
+        container_name = f"user_{user.id}_{user.username}"
+        jupyter_port = random.randint(9000, 9999)
+        jupyter_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        
+        # Prepare volumes
+        user_dir = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}_{user.username}')
+        volumes = {
+            os.path.join(user_dir, 'jupyter'): {'bind': '/home/jovyan/work', 'mode': 'rw'},
+            os.path.join(user_dir, 'models'): {'bind': '/models', 'mode': 'ro'},
+            os.path.join(user_dir, 'data'): {'bind': '/data', 'mode': 'ro'}
+        }
+        
+        # Run container
+        container = self.client.containers.run(
+            image_id,
+            name=container_name,
+            detach=True,
+            ports={'8888/tcp': jupyter_port},
+            environment={
+                'JUPYTER_TOKEN': jupyter_token,
+                'GRANT_SUDO': 'yes'
+            },
+            volumes=volumes,
+            mem_limit=f"{user.ram_limit}m",
+            cpu_shares=int(user.cpu_limit * 1024),
+            runtime='nvidia' if user.gpu_access else None
+        )
+        
+        return container.id, jupyter_port, jupyter_token

@@ -14,27 +14,27 @@ def user_file_path(instance, filename):
 
 
 class DockerContainer(models.Model):
-    CONTAINER_TYPES = [
-        ('regular', 'Regular Container'),
-        ('jupyter', 'Jupyter Notebook'),
-        ('ai', 'AI Model Service')
+    STATUS_CHOICES = [
+        ('building', 'Building'),
+        ('running', 'Running'),
+        ('stopped', 'Stopped'),
+        ('error', 'Error')
     ]
-
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    container_id = models.CharField(max_length=64, default='default_container_id')
-    container_type = models.CharField(max_length=20, choices=CONTAINER_TYPES, default='regular')
-    image_name = models.CharField(max_length=255)
-    status = models.CharField(max_length=20, default='stopped')
-    port_bindings = models.JSONField(default=dict)
+    
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='containers')
+    container_id = models.CharField(max_length=64, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='building')
+    dockerfile = models.FileField(upload_to='dockerfiles/')
+    build_logs = models.TextField(blank=True)
+    jupyter_token = models.CharField(max_length=50, blank=True)
+    jupyter_port = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-updated_at']
-        unique_together = ('user', 'container_type')
-
-    def __str__(self):
-        return f"{self.user.username}'s {self.image_name} ({self.status})"
+    resource_limits = models.JSONField(default=dict)
+    
+    def get_absolute_url(self):
+        if self.jupyter_port:
+            return f"http://localhost:{self.jupyter_port}/?token={self.jupyter_token}"
+        return None
 
 
 class UserFile(models.Model):
@@ -74,3 +74,4 @@ class AIModel(models.Model):
     def delete(self, *args, **kwargs):
         self.model_file.delete(save=False)
         super().delete(*args, **kwargs)
+

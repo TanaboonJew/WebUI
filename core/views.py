@@ -178,3 +178,60 @@ def delete_model(reques, model_id):
     except AIModel.DoesNotExist:
         messages.error(request, "Model not found")
     return redirect('ai-dashboard')
+
+@login_required
+def build_container(request):
+    if request.method == 'POST':
+        form = DockerfileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                # Save Dockerfile
+                dockerfile = form.save(commit=False)
+                dockerfile.user = request.user
+                dockerfile.save()
+                
+                # Build container
+                docker_manager = DockerManager()
+                image_id, logs = docker_manager.build_from_dockerfile(
+                    request.user, 
+                    dockerfile.dockerfile.path
+                )
+                
+                # Create container record
+                container = DockerContainer.objects.create(
+                    user=request.user,
+                    dockerfile=dockerfile,
+                    build_logs=logs,
+                    status='building',
+                    resource_limits={
+                        'cpu': request.user.cpu_limit,
+                        'ram': request.user.ram_limit,
+                        'gpu': request.user.gpu_access
+                    }
+                )
+                
+                # Run container
+                container_id, jupyter_port, jupyter_token = docker_manager.run_container(
+                    request.user, 
+                    image_id
+                )
+                
+                container.container_id = container_id
+                container.jupyter_port = jupyter_port
+                container.jupyter_token = jupyter_token
+                container.status = 'running'
+                container.save()
+                
+                # Set as active container
+                request.user.active_container = container
+                request.user.save()
+                
+                messages.success(request, "Container built and started successfully!")
+                return redirect('docker-management')
+                
+            except Exception as e:
+                messages.error(request, f"Build failed: {str(e)}")
+    else:
+        form = DockerfileUploadForm()
+    
+    return render(request, 'core/build_container.html', {'form': form})

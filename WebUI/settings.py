@@ -158,3 +158,16 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    
+AI_MODEL_CONFIG = {
+    'SUPPORTED_FRAMEWORKS': ['tensorflow', 'pytorch', 'onnx'],
+    'MAX_MODEL_SIZE': 1024 * 1024 * 500,  # 500MB
+    'MODEL_STORAGE': os.path.join(MEDIA_ROOT, 'ai_models'),
+}
+
+JUPYTER_CONFIG = {
+    'BASE_IMAGE': 'jupyter/tensorflow-notebook:latest',
+    'MEMORY_LIMIT': '4G',
+    'GPU_ACCESS': True,
+    'DEFAULT_PORT_RANGE': (10000, 11000)
+}
